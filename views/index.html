@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        /* General Reset and Layout Setup */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #2b5876, #4e4376);
+            color: white;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Container with Glass Effect and Animation */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInScale 1.5s ease-in-out, shadowPulse 2s infinite ease-in-out, bounceEffect 2s ease-in-out infinite;
+            position: relative;
+            max-height: 90vh;
+            overflow: hidden;
+        }
+
+        /* Hover Effects for Container */
+        .container:hover {
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+            transform: translateY(-10px);
+            animation: none;
+            /* Disable pulse and bounce effects on hover */
+        }
+
+        /* Heading with gradient animation */
+        h1 {
+            font-size: 2.8rem;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, #f7bb97, #f79c42);
+            -webkit-background-clip: text;
+            background: linear-gradient(90deg, #f7bb97, #f79c42);
+            -webkit-background-clip: text;
+            /* Vendor prefix for WebKit browsers (like Safari) */
+            -moz-background-clip: text;
+            /* Vendor prefix for Firefox */
+            background-clip: text;
+            /* Standard property */
+
+            -webkit-text-fill-color: transparent;
+            animation: gradientAnimation 3s infinite linear;
+        }
+
+        /* Input Field */
+        input {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1.1rem;
+            color: #2a2a72;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.2),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        input:focus {
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(255, 105, 180, 0.8);
+        }
+
+        /* Send Button with Hover Effects */
+        button {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1.2rem;
+            background: linear-gradient(90deg, #ff7e5f, #feb47b);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.4s ease;
+            margin-top: 20px;
+            box-shadow: 0px 12px 20px rgba(255, 127, 95, 0.5);
+        }
+
+        button:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 15px 25px rgba(255, 127, 95, 0.8);
+            background: linear-gradient(90deg, #feb47b, #ff7e5f);
+        }
+
+        /* Message Area with Dynamic Scroll */
+        .messages {
+            max-height: 300px;
+            overflow-y: scroll;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: inset 4px 4px 8px rgba(0, 0, 0, 0.2),
+                inset -4px -4px 8px rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            animation: slideUp 0.8s ease-out;
+            margin-top: 25px;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .messages p {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px 20px;
+            margin: 15px 0;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1.1rem;
+            backdrop-filter: blur(4px);
+            animation: fadeInMessage 0.6s ease-out;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Scroll Animation */
+        .messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .messages::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Animations */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes gradientAnimation {
+            0% {
+                background-position: -500px 0;
+            }
+
+            100% {
+                background-position: 500px 0;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInMessage {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shadowPulse {
+            0% {
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6);
+            }
+
+            100% {
+                box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        /* Additional Bounce Effect for the Container */
+        @keyframes bounceEffect {
+            0% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-5px);
+            }
+
+            50% {
+                transform: translateY(0);
+            }
+
+            70% {
+                transform: translateY(-3px);
+            }
+
+            100% {
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            input,
+            button {
+                font-size: 1rem;
+            }
+
+            .messages {
+                max-height: 250px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                width: 85%;
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .messages {
+                max-height: 275px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Chat App</h1>
+        <input type="text" id="message" placeholder="Type your message here...">
+        <button id="sendButton">Send</button>
+        <div id="messages" class="messages"></div>
+    </div>
+
+    <script src="/js/script.js"></script>
+</body>
+
+</html>
